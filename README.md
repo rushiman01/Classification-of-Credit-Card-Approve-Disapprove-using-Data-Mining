@@ -1,0 +1,2 @@
+# Classification-of-Credit-Card-Approve-Disapprove-using-Data-Mining
+The project included classifying the anonymous credit card applications data-set for approval or disapproval depending on the 15 supporting attributes in the data set. The data set was received from University of California, Irvine (UCI) Machine Learning Repository with all attribute names and values changed to meaningless symbols to protect confidentiality of the data. The data mining model was able to classify the applicants as possible defaulters or good borrowers.
