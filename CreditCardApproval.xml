@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><process version="7.5.003">
+  <context>
+    <input/>
+    <output/>
+    <macros/>
+  </context>
+  <operator activated="true" class="process" compatibility="7.5.003" expanded="true" name="Process">
+    <process expanded="true">
+      <operator activated="true" breakpoints="after" class="retrieve" compatibility="7.5.003" expanded="true" height="68" name="Retrieve CreditApproval" width="90" x="45" y="34">
+        <parameter key="repository_entry" value="../data/CreditCardApproval_RM"/>
+      </operator>
+      <operator activated="true" breakpoints="after" class="rename" compatibility="7.5.003" expanded="true" height="82" name="Rename" width="90" x="112" y="136">
+        <parameter key="old_name" value="att1"/>
+        <parameter key="new_name" value="Sex"/>
+        <list key="rename_additional_attributes">
+          <parameter key="att2" value="Age"/>
+          <parameter key="att3" value="Debt"/>
+          <parameter key="att4" value="Married"/>
+          <parameter key="att5" value="BankCustomer"/>
+          <parameter key="att6" value="EducationLevel"/>
+          <parameter key="att7" value="Ethinicity"/>
+          <parameter key="att8" value="YearsEmployed"/>
+          <parameter key="att9" value="PriorDefault"/>
+          <parameter key="att10" value="Employed"/>
+          <parameter key="att11" value="CreditScore"/>
+          <parameter key="att12" value="DriverLicense"/>
+          <parameter key="att13" value="Citizen"/>
+          <parameter key="att14" value="Zipcode"/>
+          <parameter key="att15" value="Income"/>
+          <parameter key="att16" value="Approved"/>
+        </list>
+      </operator>
+      <operator activated="true" breakpoints="after" class="set_role" compatibility="7.5.003" expanded="true" height="82" name="Set Role" width="90" x="313" y="34">
+        <parameter key="attribute_name" value="Approved"/>
+        <parameter key="target_role" value="label"/>
+        <list key="set_additional_roles"/>
+      </operator>
+      <operator activated="true" breakpoints="after" class="replace_missing_values" compatibility="7.5.003" expanded="true" height="103" name="Replace Missing Values" width="90" x="380" y="238">
+        <list key="columns"/>
+      </operator>
+      <operator activated="false" breakpoints="after" class="discretize_by_bins" compatibility="7.5.003" expanded="true" height="103" name="Discretize" width="90" x="514" y="34">
+        <parameter key="attribute_filter_type" value="value_type"/>
+        <parameter key="attributes" value="Age|Debt|YearsEmployed|CreditScore|Income|Zipcode"/>
+        <parameter key="number_of_bins" value="3"/>
+      </operator>
+      <operator activated="true" breakpoints="after" class="split_data" compatibility="7.5.003" expanded="true" height="103" name="Split Data" width="90" x="581" y="289">
+        <enumeration key="partitions">
+          <parameter key="ratio" value="0.7"/>
+          <parameter key="ratio" value="0.3"/>
+        </enumeration>
+        <parameter key="sampling_type" value="shuffled sampling"/>
+      </operator>
+      <operator activated="true" class="k_nn" compatibility="7.5.003" expanded="true" height="82" name="k-NN (2)" width="90" x="648" y="85"/>
+      <operator activated="true" class="apply_model" compatibility="7.5.003" expanded="true" height="82" name="Apply Model" width="90" x="782" y="340">
+        <list key="application_parameters"/>
+      </operator>
+      <operator activated="true" class="performance_classification" compatibility="7.5.003" expanded="true" height="82" name="Performance" width="90" x="849" y="85">
+        <list key="class_weights"/>
+      </operator>
+      <operator activated="false" class="x_validation" compatibility="7.5.003" expanded="true" height="124" name="Validation" width="90" x="246" y="340">
+        <parameter key="number_of_validations" value="5"/>
+        <process expanded="true">
+          <operator activated="true" class="naive_bayes" compatibility="7.5.003" expanded="true" height="82" name="Naive Bayes" width="90" x="179" y="136"/>
+          <operator activated="false" class="concurrency:parallel_decision_tree" compatibility="7.5.003" expanded="true" height="82" name="Decision Tree" width="90" x="45" y="289"/>
+          <operator activated="false" class="k_nn" compatibility="7.5.003" expanded="true" height="82" name="k-NN" width="90" x="313" y="289"/>
+          <connect from_port="training" to_op="Naive Bayes" to_port="training set"/>
+          <connect from_op="Naive Bayes" from_port="model" to_port="model"/>
+          <portSpacing port="source_training" spacing="0"/>
+          <portSpacing port="sink_model" spacing="0"/>
+          <portSpacing port="sink_through 1" spacing="0"/>
+        </process>
+        <process expanded="true">
+          <operator activated="true" class="apply_model" compatibility="7.5.003" expanded="true" height="82" name="Apply Model (2)" width="90" x="112" y="85">
+            <list key="application_parameters"/>
+          </operator>
+          <operator activated="true" class="performance_binominal_classification" compatibility="7.5.003" expanded="true" height="82" name="Performance (2)" width="90" x="313" y="85">
+            <parameter key="classification_error" value="true"/>
+          </operator>
+          <conn//Local Repository/data/AAII (Revised Attributes) DATA 20150430ect from_port="model" to_op="Apply Model (2)" to_port="model"/>
+          <connect from_port="test set" to_op="Apply Model (2)" to_port="unlabelled data"/>
+          <connect from_op="Apply Model (2)" from_port="labelled data" to_op="Performance (2)" to_port="labelled data"/>
+          <connect from_op="Performance (2)" from_port="performance" to_port="averagable 1"/>
+          <portSpacing port="source_model" spacing="0"/>
+          <portSpacing port="source_test set" spacing="0"/>
+          <portSpacing port="source_through 1" spacing="0"/>
+          <portSpacing port="sink_averagable 1" spacing="0"/>
+          <portSpacing port="sink_averagable 2" spacing="0"/>
+        </process>
+      </operator>
+      <connect from_op="Retrieve CreditApproval" from_port="output" to_op="Rename" to_port="example set input"/>
+      <connect from_op="Rename" from_port="example set output" to_op="Set Role" to_port="example set input"/>
+      <connect from_op="Set Role" from_port="example set output" to_op="Replace Missing Values" to_port="example set input"/>
+      <connect from_op="Replace Missing Values" from_port="example set output" to_op="Split Data" to_port="example set"/>
+      <connect from_op="Split Data" from_port="partition 1" to_op="k-NN (2)" to_port="training set"/>
+      <connect from_op="Split Data" from_port="partition 2" to_op="Apply Model" to_port="unlabelled data"/>
+      <connect from_op="k-NN (2)" from_port="model" to_op="Apply Model" to_port="model"/>
+      <connect from_op="Apply Model" from_port="labelled data" to_op="Performance" to_port="labelled data"/>
+      <connect from_op="Apply Model" from_port="model" to_port="result 2"/>
+      <connect from_op="Performance" from_port="performance" to_port="result 1"/>
+      <connect from_op="Performance" from_port="example set" to_port="result 3"/>
+      <portSpacing port="source_input 1" spacing="0"/>
+      <portSpacing port="sink_result 1" spacing="0"/>
+      <portSpacing port="sink_result 2" spacing="0"/>
+      <portSpacing port="sink_result 3" spacing="0"/>
+      <portSpacing port="sink_result 4" spacing="0"/>
+    </process>
+  </operator>
+</process>
